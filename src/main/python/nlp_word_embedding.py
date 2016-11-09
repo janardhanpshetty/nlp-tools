@@ -11,9 +11,10 @@ from gensim.models.word2vec import Word2Vec
 from glove import Corpus, Glove
 
 
-class Sentences(object):
+class DirTokenizer(object):
     """
-    This class supports sentence formation as preprocessor for word2vec and glove word embeddings.
+    This class takes a directory name and parses all files in it and in each file
+    it parses line by line and splits by space delimiter
     """
     def __init__(self, dirname):
         """
@@ -50,7 +51,7 @@ def word2vec_embedding(corpus_dir, output_file, output_format, embed_size, windo
     :param output_format: bin/text
     :return: None but saves the file in given file format
     """
-    sentences = Sentences(corpus_dir)
+    sentences = DirTokenizer(corpus_dir)
     model = Word2Vec(size=embed_size, window=window, min_count=min_count, workers=multiprocessing.cpu_count())
     #  Build vocab
     model.build_vocab(sentences)
@@ -78,7 +79,7 @@ def glove_embedding(corpus_dir, output_file, output_format, embed_size, window, 
     :param threads: int
     :return: None but saves the file in given file format
     """
-    sentences = Sentences(corpus_dir)
+    sentences = DirTokenizer(corpus_dir)
     corpus = Corpus()
     corpus.fit(sentences, window)
     # components: latent dimensions
@@ -86,7 +87,6 @@ def glove_embedding(corpus_dir, output_file, output_format, embed_size, window, 
     glove.fit(corpus.matrix, epochs=epochs, no_threads=threads, verbose=True)
     # Supply a word-id dictionary to allow similarity queries.
     glove.add_dictionary(corpus.dictionary)
-    glove.save(output_file)
     if(output_format == "binary"):
         glove.save(output_file)
     elif(output_format == "text"):
@@ -95,7 +95,7 @@ def glove_embedding(corpus_dir, output_file, output_format, embed_size, window, 
 
 
 def get_args():
-    """This function parses and return arguments passed in"""
+    """This function parses and return arguments passed in command line"""
     parser = argparse.ArgumentParser(description="Word Embedding Tool")
     # Add arguments
     parser.add_argument('-e', '--embed', type=str, help='Embedding Type', required=True)
